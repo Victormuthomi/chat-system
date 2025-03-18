@@ -8,18 +8,19 @@ import (
 
 // Client represents a single WebSocket connection.
 type Client struct {
-	Hub  *Hub            // The Hub this client belongs to.
-	Conn *websocket.Conn // The WebSocket connection.
-	Send chan []byte     // Outgoing messages.
-  Username string
+	Hub      *Hub            // The Hub this client belongs to.
+	Conn     *websocket.Conn // The WebSocket connection.
+	Send     chan []byte     // Outgoing messages.
+	Username string          // ✅ Added Username field
 }
 
 // NewClient creates a new WebSocket client.
-func NewClient(hub *Hub, conn *websocket.Conn) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, username string) *Client {
 	return &Client{
-		Hub:  hub,
-		Conn: conn,
-		Send: make(chan []byte, 256),
+		Hub:      hub,
+		Conn:     conn,
+		Send:     make(chan []byte, 256),
+		Username: username, // ✅ Initialize username
 	}
 }
 
@@ -35,6 +36,7 @@ func (c *Client) ReadMessages() {
 			log.Println("❌ Error reading message:", err)
 			break
 		}
+
 		c.Hub.Broadcast <- message
 	}
 }

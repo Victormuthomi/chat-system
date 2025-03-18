@@ -3,33 +3,38 @@ package main
 import (
 	"fmt"
 	"log"
-
-	"chat-system/config"
-	"chat-system/routes"
-	"chat-system/ws"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"chat-system/ws"
+  "chat-system/handlers"
 )
 
 func main() {
-	// Load configuration.
-	cfg := config.LoadConfig()
-
-	// Initialize Gin router.
-	router := gin.Default()
-
-	// Initialize WebSocket Hub.
+	r := gin.Default()
 	hub := ws.NewHub()
+
+	// Start WebSocket Hub in a Goroutine
 	go hub.Run()
 
-	// Register routes.
-	routes.RegisterRoutes(router, hub)
+	// WebSocket Endpoint
+	r.GET("/ws", func(c *gin.Context) {
+		// Get username from query params
+		username := c.Query("username")
+		if username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+			return
+		}
+    handlers.WebSocketHandler(hub, c)
 
-	// Start the server.
-	port := cfg.Port
-	fmt.Println("🚀 Server is running on port", port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatal("Server failed:", err)
+	
+  })
+
+	// Start Server
+	port := ":8080"
+	fmt.Println("✅ WebSocket Server running on", port)
+	if err := r.Run(port); err != nil {
+		log.Fatal("❌ Failed to start server:", err)
 	}
 }
 
